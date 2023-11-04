@@ -30,6 +30,9 @@ export default function Home() {
                 { opacity: [0, 1] },
                 { ease: "easeInOut", delay: stagger(1), duration: 1 },
             ],
+            [
+              '#container img:first-child', {opacity: [1]}
+            ]
         ]);
         animControls.current.pause();
     }, []);

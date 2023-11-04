@@ -27,5 +27,5 @@ body {
 }
 
 img {
-  @apply object-contain;
+  @apply object-contain opacity-0;
 }
