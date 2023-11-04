@@ -1,41 +1,33 @@
 "use client";
 
-import {
-    useScroll,
-    animate,
-    AnimationPlaybackControls,
-    stagger,
-} from "framer-motion";
-import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useScroll, useTransform } from "framer-motion";
+import Canvas from "~/components/Canvas";
+import { calcDrawImage, preloadImages } from "~/utils";
 
 const FOLDER_NAME = "images";
 const IMAGES_NO = 80;
+const URLS: string[] = [];
+
+for (let i = 1; i <= IMAGES_NO; i++) {
+    URLS.push(`/${FOLDER_NAME}/${i}.jpg`);
+}
 
 export default function Home() {
-    const animControls = useRef<AnimationPlaybackControls>();
-    useScroll({
-        offset: ["start end", "end start"],
-    }).scrollYProgress.on("change", (yProgress) => {
-        if (!animControls.current) return;
-
-        // Calculate the new time for the animation based on scroll progress
-        animControls.current.time = yProgress * animControls.current.duration;
+    const { scrollYProgress } = useScroll({
+        offset: ["start end", "end end"],
     });
 
-    useEffect(() => {
-        animControls.current = animate([
-            [
-                "#container img",
-                { opacity: [0, 1] },
-                { ease: "easeInOut", delay: stagger(1), duration: 1 },
-            ],
-            [
-              '#container img:first-child', {opacity: [1]}
-            ]
-        ]);
-        animControls.current.pause();
-    }, []);
+    const y = useTransform(scrollYProgress, [0, 1], [0, IMAGES_NO]);
+
+    const draw = async (context: CanvasRenderingContext2D) => {
+        const images = await preloadImages(URLS);
+
+        calcDrawImage(context, images[0]);
+
+        scrollYProgress.on("change", () => {
+            calcDrawImage(context, images[Math.round(y.get()) - 1]);
+        });
+    };
 
     return (
         <>
@@ -45,19 +37,7 @@ export default function Home() {
                         className="w-[100svh] h-[100svh] relative"
                         id="container"
                     >
-                        {/* <Image src={`/images/${1}.jpg`} alt={`${1}`} fill /> */}
-                        {Array.from({ length: IMAGES_NO }).map((_, i) => {
-                            return (
-                                <>
-                                    <Image
-                                        key={i}
-                                        src={`/images/${i + 1}.jpg`}
-                                        alt={`${i + 1}`}
-                                        fill
-                                    />
-                                </>
-                            );
-                        })}
+                        <Canvas draw={draw} height={700} width={900} />
                     </div>
                 </div>
             </div>
